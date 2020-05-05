@@ -1,0 +1,24 @@
+version: '3'
+services:
+  development:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: "development"
+
+    hostname: "development"
+
+    volumes: 
+        - ..:/workspaces
+
+    ports: 
+        - "8000:8000"
+
+    cap_add:
+     - SYS_PTRACE
+
+    security_opt:
+      - seccomp:unconfined
+
+    command: /bin/sh -c "while sleep 1000; do :; done"

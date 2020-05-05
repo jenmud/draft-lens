@@ -1,0 +1,156 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Draft lense</title>
+    <meta name="description" content="Draft lense for visualization">
+    <meta name="author" content="Jenda Mudron">
+
+    <link rel="stylesheet" href="/static/styling.css">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.blue_grey-blue.min.css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Roboto:300,400,500,700" type="text/css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+    <script type="text/javascript" src="https://visjs.github.io/vis-network/standalone/umd/vis-network.min.js"></script>
+</head>
+
+<body>
+    <div class="mdl-layout mdl-js-layout">
+        <header class="mdl-layout__header">
+            <div class="mdl-layout__header-row">
+                <span class="mdl-layout__title">Welcome to Draft Lense</span>
+                <div class="mdl-layout-spacer"></div>
+                <nav class="mdl-navigation">
+                    <a class="mdl-navigation__link" href="https://github.com/jenmud/Draft">Github</a>
+                </nav>
+            </div>
+        </header>
+        <div class="mdl-layout__drawer">
+            <span class="mdl-layout__title">Simple Layout</span>
+            <nav class="mdl-navigation">
+                <a class="mdl-navigation__link" href="https://github.com/jenmud/Draft">Github</a>
+                <a class="mdl-navigation__link" href="/assets/json">Raw JSON data</a>
+            </nav>
+        </div>
+        <main class="mdl-layout__content">
+            <!-- main content grid -->
+            <div class="mdl-grid" style="height: 100%;">
+                <!-- info and query pannel -->
+                <div class="mdl-cell mdl-cell--4-col">
+                    <!-- inner grid -->
+                    <div class="mdl-grid" style="padding-top: unset;">
+                        <!-- Query card -->
+                        <div class="mdl-cell" style="width: 100%; height: 100%">
+                            <form action="/assets/json" method="POST">
+                                <div class="mdl-card mdl-shadow--2dp" style="width: 100%; height: 100%;">
+                                    <div class="mdl-card__title card-title-colors">
+                                        <h2 id="query-title" class="mdl-card__title-text">Query</h2>
+                                        <div class="mdl-tooltip" data-mdl-for="query-title">Extremely striped down Cpyher query (more features to come)</div>
+                                    </div>
+                                    <div class="mdl-card__supporting-text">
+                                        <div style="height: 100%;">
+                                            <div class="mdl-textfield mdl-js-textfield" style="width: 100%">
+                                                <textarea id="cypher" class="mdl-textfield__input" name="cypher" type="text" rows="11" id="cypher" style="width: 100% !important;"></textarea>
+                                                <label class="mdl-textfield__label" for="cypher">MATCH (n) RETURN n</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mdl-card__actions mdl-card--border">
+                                        <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" onclick="network.setData([]); FetchGraphData();">Query</a>
+                                    </div>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- end Query card -->
+                    <!-- Info card -->
+                    <div class="mdl-cell" style="width: 100%">
+                        <div class="mdl-card mdl-shadow--2dp" style="width: 100%;">
+                            <div class="mdl-card__title card-title-colors">
+                                <h2 class="mdl-card__title-text">Information</h2>
+                            </div>
+                            <div class="mdl-card__supporting-text">
+                                <table class="mdl-data-table mdl-js-data-table" style="width: 100%;">
+                                    <thead>
+                                        <tr>
+                                            <th class="mdl-data-table__cell--non-numeric">Metric</th>
+                                            <th class="mdl-data-table__cell--non-numeric">Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr id="start">
+                                            <td class="mdl-data-table__cell--non-numeric">StartTime</td>
+                                            <td id="startTime" class="mdl-data-table__cell--non-numeric">Unknown</td>
+                                            <div class="mdl-tooltip" data-mdl-for="start">Time when the service was
+                                                started in UTC</div>
+                                        </tr>
+                                        <tr id="cpu">
+                                            <td class="mdl-data-table__cell--non-numeric">CPU count</td>
+                                            <td id="cpuCount">0</td>
+                                            <div class="mdl-tooltip" data-mdl-for="cpu">How many CPU's are available
+                                            </div>
+                                        </tr>
+                                        <tr id="goroutines">
+                                            <td class="mdl-data-table__cell--non-numeric">Goroutine count</td>
+                                            <td id="goroutineCount"">0</td>
+                                                <div class=" mdl-tooltip" data-mdl-for="goroutines">The number of
+                                                running goroutines
+                            </div>
+                            </tr>
+                            <tr id="mem">
+                                <td class="mdl-data-table__cell--non-numeric">Memory Usage (Bytes)</td>
+                                <td id="memUsage">0</td>
+                                <div class="mdl-tooltip" data-mdl-for="mem">Total memory used in Bytes</div>
+                            </tr>
+                            <tr id="nodes">
+                                <td class="mdl-data-table__cell--non-numeric">Node count</td>
+                                <td id="nodeCount">0</td>
+                                <div class="mdl-tooltip" data-mdl-for="nodes">Total number of nodes in the graph</div>
+                            </tr>
+                            <tr id="edges">
+                                <td class="mdl-data-table__cell--non-numeric">Edge count</td>
+                                <td id="edgeCount">0</td>
+                                <div class="mdl-tooltip" data-mdl-for="edges">Total number of edges in the graph</div>
+                            </tr>
+                            </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <!-- end Info card -->
+            </div>
+            <!-- end inner grid -->
+    </div>
+    <!-- end and query pannel -->
+    <div class="mdl-cell mdl-cell--8-col" style="padding-top: 8px;">
+        <div class="mdl-card mdl-shadow--2dp" style="width: 100%; height: 98%">
+            <div class="mdl-card__title card-title-colors">
+                <h2 class="mdl-card__title-text">Lense</h2>
+            </div>
+            <div id="graph"></div>
+        </div>
+    </div>
+    </div>
+    <!-- end main content grid -->
+
+    <!-- A alert toast -->
+    <div id="query-toast" class="mdl-js-snackbar mdl-snackbar">
+        <div class="mdl-snackbar__text"></div>
+        <button class="mdl-snackbar__action" type="button"></button>
+    </div>
+    <!-- end alert toast -->
+    </main>
+    </div>
+
+    <script src="/static/js/network.js"></script>
+    <script src="/static/js/stats.js"></script>
+    <script>
+        document.onload = FetchFullGraphData();
+    </script>
+</body>
+
+</html>

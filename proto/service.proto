@@ -1,0 +1,126 @@
+syntax = "proto3";
+
+option go_package = ".;service";
+
+// UIDReq is a request used for searching the graph for a node/edge
+// which contains the uid.
+message UIDReq {
+    string uid = 1;
+}
+
+// NodeReq is a node request.
+message NodeReq {
+    string uid = 1;
+    string label = 2;
+    map<string, bytes> properties = 3;
+}
+
+// NodeResp is a node response.
+message NodeResp {
+    string uid = 1;
+    string label = 2;
+    map<string, bytes> properties = 3;
+    repeated string in_edges = 4;
+    repeated string out_edges = 5;
+}
+
+// EdgeReq is a edge request.
+message EdgeReq {
+    string uid = 1;
+    string source_uid = 3;
+    string label = 2;
+    string target_uid = 4;
+    map<string, bytes> properties = 5;
+}
+
+// EdgeResp is a edge response.
+message EdgeResp {
+    string uid = 1;
+    string source_uid = 3;
+    string label = 2;
+    string target_uid = 4;
+    map<string, bytes> properties = 5;
+}
+
+// RemoveResp is a response when removing a item from the graph.
+message RemoveResp {
+    string uid = 1;
+    string error = 2;
+    bool success = 3;
+}
+
+// NodesReq used for returning all the nodes in the graph.
+message NodesReq {}
+
+// EdgesReq used for returning all the edges in the graph.
+message EdgesReq {}
+
+// DumpReq is a request to producting a graph dump.
+message DumpReq {
+    // Starting node for a subgraph. If omitted then the entire graph is dumped.
+    string node_uid = 1;
+    // How many levels to return. If omitted then the no limit is applied.
+    int32 levels = 2;
+}
+
+// DumpResp is a graph dump response.
+message DumpResp {
+    repeated NodeResp nodes = 1;
+    repeated EdgeResp edges = 2;
+}
+
+// StatsReq is a stats message containing inforamtion about the service.
+message StatsReq {
+}
+
+// StatsResp is the stats response with information about the service.
+message StatsResp {
+    // start time in UTC when the instance started.
+    string start_time = 1;
+    // number of CPUS available.
+    int32 num_cpu = 2;
+    // number of goroutings running.
+    int32 num_goroutines = 3;
+    // number of nodes in the graph.
+    int32 node_count = 4;
+    // number of edges in the graph.
+    int32 edge_count = 5;
+    // total memory allocated in bytes.
+    int32 total_memory_alloc = 6;
+}
+
+// QueryReq is query request.
+message QueryReq {
+    string query = 1;
+}
+
+// Graph is the graph service.
+service Graph {
+    // AddNode adds a node to the graph.
+    rpc AddNode (NodeReq) returns (NodeResp);
+    // RemoveNode remove a node from the graph.
+    rpc RemoveNode (UIDReq) returns (RemoveResp);
+    // Node returns the node if found.
+    rpc Node (UIDReq) returns (NodeResp);
+    // Nodes returns all the node in the graph.
+    rpc Nodes (NodesReq) returns (stream NodeResp);
+
+    // AddEdge adds a edge to the graph.
+    rpc AddEdge (EdgeReq) returns (EdgeResp);
+    // RemoveEdge remove a edge from the graph.
+    rpc RemoveEdge (UIDReq) returns (RemoveResp);
+    // Edge returns the edge if found.
+    rpc Edge (UIDReq) returns (EdgeResp);
+    // Edges returns all the edges in the graph.
+    rpc Edges (EdgesReq) returns (stream EdgeResp);
+
+    // Stats returns some stats about the service.
+    rpc Stats(StatsReq) returns (StatsResp);
+
+    // Query sends a query to the graph and returns a dump
+    // with the query results.
+    rpc Query(QueryReq) returns (DumpResp);
+
+    // Dump the graph.
+    rpc Dump(DumpReq) returns (DumpResp);
+}

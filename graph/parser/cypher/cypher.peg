@@ -1,0 +1,220 @@
+{
+// Stripped down OpenCypher parser for quering the graph. 
+package cypher
+}
+
+Statement <- _ query:Query _ EOF {
+    q := QueryPlan{
+        ReadingClause: []ReadingClause{query.(ReadingClause)},
+    }
+
+    return q, nil
+}
+
+Query <- regularQuery:RegularQuery {
+    return regularQuery, nil
+}
+
+RegularQuery <-  singleQuery:SingleQuery {
+    return singleQuery, nil
+}
+
+SingleQuery <- matches:(ReadingClause _)+ returns:Return {
+    if returns == nil {
+        return nil, fmt.Errorf("RETURN missing and is required")
+    }
+
+    clause := ReadingClause{
+        Matches: []Match{},
+        Returns: returns.([]string),
+    }
+
+    for _, match := range toIfaceSlice(matches) {
+        m := toIfaceSlice(match)
+        clause.Matches = append(clause.Matches, m[0].(Match))
+    }
+
+    expected := map[string]bool{}
+
+    for _, v := range clause.Returns {
+        expected[v] = false
+    }
+
+    for _, m := range clause.Matches {
+        for _, n := range m.Nodes {
+            if _, ok := expected[n.Variable]; !ok {
+                return nil, fmt.Errorf("Missing return variable %s", n.Variable)
+            }
+        }
+    }
+
+    return clause, nil
+}
+
+ReadingClause <- match:Match {
+    return match.(Match), nil
+}
+
+Return <- R E T U R N  _ variable:Variable _ extra:(',' _ Variable)* {
+    extras := toIfaceSlice(extra)
+    variables := []string{variable.(string)}
+    for _, r := range extras {
+        v := toIfaceSlice(r)
+        variables = append(variables, v[len(v) - 1].(string))
+    }
+    return variables, nil
+}
+
+Match <- M A T C H _ pattern:Pattern {
+    match := Match{Nodes: []Node{pattern.(Node)}}
+    return match, nil
+}
+
+Pattern <- PatternPart 
+
+PatternPart <- AnonymousPatternPart
+
+AnonymousPatternPart <- PatternElement
+
+PatternElement <- NodePattern
+
+NodePattern <- '(' variable:Variable _ labels:NodeLabels? _ props:(Properties)? _ ')' {
+    plan := Node{
+        Variable: variable.(string),
+    }
+
+    if labels != nil {
+        plan.Labels = labels.([]string)
+    }
+
+    if props != nil {
+        plan.Properties = props.(map[string][]byte)
+    }
+
+    return plan, nil
+}
+
+NodeLabels <- label:NodeLabel _ labels:(NodeLabel)*{
+    labelsList := toIfaceSlice(labels)
+
+    l := make([]string, 1 + len(labelsList))
+    l[0] = label.(string)
+
+    for i, label := range labelsList {
+        l[i+1] = label.(string)
+    }
+
+    if len(l) > 1 {
+        return nil, fmt.Errorf("Draft nodes only support a single label")
+    }
+
+    return l, nil
+}
+
+NodeLabel <- ':' _ label:String {
+    return label, nil
+}
+
+Variable <- SymbolicName
+
+SymbolicName <- String
+
+Properties <- MapLiteral
+ProperyKV <- key:String _ ':' _ value:(StringLiteral/Integer/BoolLiteral){
+    switch value.(type) {
+    case string:
+        return KV{key.(string), []byte(value.(string))}, nil
+    case int64:
+        return KV{key.(string), []byte(fmt.Sprintf("%d", value.(int64)))}, nil
+    case bool:
+        return KV{key.(string), []byte(fmt.Sprintf("%t", value.(bool)))}, nil
+    default:
+        return nil, fmt.Errorf("Don't know what to do with %#v", value)
+    }
+}
+
+MapLiteral <- '{' _ kv:(ProperyKV _ (',' _ ProperyKV)* )? _ '}' {
+    props := make(map[string][]byte)
+
+    propsList := toIfaceSlice(kv)
+
+    if len(propsList) == 0 {
+        return props, nil
+    }
+
+    first := propsList[0].(KV)
+    props[first.Key] = first.Value
+
+    rest := toIfaceSlice(propsList[2])
+    for _, pkv := range rest {
+        kv := toIfaceSlice(pkv)[2].(KV)
+        if _, ok := props[kv.Key]; ok {
+            return nil, fmt.Errorf("Duplicate map key %s not allowed", kv.Key)
+        }
+        props[kv.Key] = kv.Value
+    }
+
+    return props, nil
+}
+
+StringLiteral <- ('"' ( !EscapedChar . / '\\' EscapeSequence )* '"' / "'" ( !EscapedChar . / '\\' EscapeSequence )* "'") {
+    c.text = bytes.Replace(c.text, []byte(`\/`), []byte(`/`), -1)
+
+    // deal with single quates
+    if strings.HasPrefix(string(c.text), "'") {
+        c.text = bytes.ReplaceAll(c.text, []byte(`"`), []byte(`'`))
+        c.text = bytes.ReplaceAll(c.text, []byte(`'`), []byte(``))
+        return string(c.text), nil
+    }
+
+    // deal with double quates
+    c.text = bytes.ReplaceAll(c.text, []byte(`'`), []byte(`\'`))
+    return strconv.Unquote(string(c.text))
+}
+
+EscapedChar <- [\x00-\x1f'"\\]
+
+EscapeSequence <- SingleCharEscape / UnicodeEscape
+
+SingleCharEscape <- ['"\\/bfnrt]
+
+UnicodeEscape <- 'u' HexDigit HexDigit HexDigit HexDigit
+
+String <- [a-zA-Z0-9]+ {
+    return string(c.text), nil
+}
+
+Integer <- [0-9]+ {
+    return strconv.ParseInt(string(c.text), 10, 32)
+}
+
+BoolLiteral <- T "rue" { return true, nil } / F "alse" { return false, nil}
+
+_ "whitespace" <- [ \t\r\n]*
+
+A <- ('A' / 'a')
+B <- ('B' / 'b')
+C <- ('C' / 'c')
+D <- ('D' / 'd')
+E <- ('E' / 'e')
+F <- ('F' / 'f')
+G <- ('G' / 'g')
+H <- ('H' / 'h')
+I <- ('I' / 'i')
+K <- ('K' / 'k')
+L <- ('L' / 'l')
+M <- ('M' / 'm')
+N <- ('N' / 'n')
+O <- ('O' / 'o')
+P <- ('P' / 'p')
+Q <- ('Q' / 'q')
+R <- ('R' / 'r')
+S <- ('S' / 's')
+T <- ('T' / 't')
+U <- ('U' / 'u')
+V <- ('V' / 'v')
+W <- ('W' / 'w')
+X <- ('X' / 'x')
+Y <- ('Y' / 'y')
+
+EOF <- !.

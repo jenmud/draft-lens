@@ -1,0 +1,57 @@
+{
+    "nodes": [
+        {
+            "uid": "node-foo",
+            "label": "person",
+            "properties": {
+                "name": "Zm9v"
+            }
+        },
+        {
+            "uid": "node-bar",
+            "label": "person",
+            "properties": {
+                "name": "YmFy"
+            }
+        },
+        {
+            "uid": "node-dog",
+            "label": "animal",
+            "properties": {
+                "name": "c29ja3M="
+            }
+        }
+    ],
+    "edges": [
+        {
+            "uid": "edge-like",
+            "source_uid": "node-foo",
+            "label": "likes",
+            "target_uid": "node-bar",
+            "properties": {}
+        },
+        {
+            "uid": "edge-dislike",
+            "source_uid": "node-bar",
+            "label": "dislikes",
+            "target_uid": "node-dog",
+            "properties": {}
+        },
+        {
+            "uid": "edge-knows",
+            "source_uid": "node-foo",
+            "label": "knows",
+            "target_uid": "node-bar",
+            "properties": {
+                "name": "MjAyMA=="
+            }
+        },
+        {
+            "uid": "edge-owns",
+            "source_uid": "node-foo",
+            "label": "owns",
+            "target_uid": "node-dog",
+            "properties": {}
+        }
+    ]
+}
