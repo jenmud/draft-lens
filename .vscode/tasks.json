@@ -4,31 +4,13 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Run Draft RPC Server",
-            "type": "shell",
-            "options": {
-                "cwd": "/workspaces/cmd/server/rpc"
-            },
-            "command": "go run *.go -addr :8001 -dump ../web/example/dump.draft",
-            "detail": "Draft RPC server",
-            "presentation": {
-                "group": "draft",
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": true,
-                "clear": true
-            }
-        },
-        {
             "label": "Run Draft Web Server",
             "type": "shell",
             "options": {
-                "cwd": "/workspaces/cmd/server/web"
+                "cwd": "/workspaces/draft-lens"
             },
             "command": "go run *.go -addr :8000 -rpc-addr localhost:8001",
-            "detail": "Draft RPC server",
+            "detail": "Draft Lens",
             "presentation": {
                 "group": "draft",
                 "echo": true,
@@ -39,30 +21,5 @@
                 "clear": true
             }
         },
-        {
-            "label": "Run Environment",
-            "type": "shell",
-            "options": {
-                "cwd": "/workspaces/cmd/web/rpc"
-            },
-            "command": "echo 'Running entire draft environment'",
-            "detail": "Entire draft environment",
-            "dependsOn": [
-                "Run Draft RPC Server",
-                "Run Draft Web Server"
-            ],
-            "presentation": {
-                "group": "draft",
-                "echo": false,
-                "reveal": "revealProblems",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": true,
-                "clear": true
-            },
-            "problemMatcher": [
-                "$go"
-            ]
-        }
     ]
 }
