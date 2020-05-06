@@ -10,7 +10,7 @@ import (
 
 	"github.com/gobuffalo/packr/v2"
 	"github.com/gorilla/mux"
-	"github.com/micro/go-micro/v2"
+	micro "github.com/micro/go-micro/v2"
 	microConfig "github.com/micro/go-micro/v2/config"
 	microEnv "github.com/micro/go-micro/v2/config/source/env"
 	microFlag "github.com/micro/go-micro/v2/config/source/flag"
@@ -62,7 +62,7 @@ func init() {
 	}
 
 	draftClient = pb.NewGraphService(
-		config.Get("draft", "service").String("draft.web.srv"),
+		config.Get("draft", "service").String("draft.cli"),
 		service.Client(),
 	)
 }
