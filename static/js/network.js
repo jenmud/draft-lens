@@ -22,6 +22,7 @@ var options = {
     },
     physics: {
         solver: "forceAtlas2Based",
+        stabilization: false,
     },
 };
 
